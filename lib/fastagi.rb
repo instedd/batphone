@@ -20,10 +20,15 @@ class FastAGIProtocol < EventMachine::Protocols::LineAndTextProtocol
         end
       else # @agi_mode == :commands
         @log.debug "<< "+line if not @log.nil?
-        return if @agi_last_defer.nil?
-        @agi_last_defer.succeed Response.new(line)
-        @agi_last_defer = nil
-        flush_queue
+        if line == "HANGUP"
+          @agi_last_defer.fail 'User hung up' if @agi_last_defer
+          @hangup = true
+        else
+          return if @agi_last_defer.nil?
+          @agi_last_defer.succeed Response.new(line)
+          @agi_last_defer = nil
+          flush_queue
+        end
       end
     rescue Exception => e
       if not @log.nil?
@@ -33,8 +38,18 @@ class FastAGIProtocol < EventMachine::Protocols::LineAndTextProtocol
     end
   end
 
+  def unbind
+    @agi_last_defer.fail 'Communication broken' if @agi_last_defer
+    @hangup = true
+    super
+  end
+
   # Send a command, and return a Deferrable for the Response object.
   def send_command(cmd, *args)
+    if @hangup
+      raise Exception.new 'Communication broken'
+    end
+
     msg = build_msg(cmd, *args)
     d = EM::DefaultDeferrable.new
     @agi_queue << [msg, d]
