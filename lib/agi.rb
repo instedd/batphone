@@ -43,13 +43,13 @@ module AGIMixin
     [cmd, *args].join(' ')
   end
 
-  # Shortcut for send. e.g.
+  # Shortcut for send_command. e.g.
   #     a.say_time(Time.now.to_i, nil)
   # is the same as
-  #     a.send("SAY TIME",Time.now.to_i,'""')
+  #     a.send_command("SAY TIME",Time.now.to_i,'""')
   def method_missing(symbol, *args)
     cmd = symbol.to_s.upcase.tr('_',' ')
-    send(cmd, *args)
+    send_command(cmd, *args)
   end
 
   # Repeat this menu followed by the timeout, with the given digits expected.
@@ -66,7 +66,7 @@ module AGIMixin
     end
   end
 
-  # The answer to every AGI#send is one of these.
+  # The answer to every AGI#send_command is one of these.
   class Response
     # Raw response string
     attr_accessor :raw
@@ -132,7 +132,7 @@ class AGI
   alias :argv :args
 
   # Send a command, wait, and return the Response object.
-  def send(cmd, *args)
+  def send_command(cmd, *args)
     msg = build_msg(cmd, *args)
     @log.debug ">> "+msg if not @log.nil?
     @io_out.puts msg

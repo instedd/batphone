@@ -34,7 +34,7 @@ class FastAGIProtocol < EventMachine::Protocols::LineAndTextProtocol
   end
 
   # Send a command, and return a Deferrable for the Response object.
-  def send(cmd, *args)
+  def send_command(cmd, *args)
     msg = build_msg(cmd, *args)
     d = EM::DefaultDeferrable.new
     @agi_queue << [msg, d]
