@@ -6,11 +6,12 @@ module Batphone
         alias_method :agi_post_init_without_fibers, :agi_post_init
         def agi_post_init
           f = Fiber.new do
-            agi_post_init_with_fibers
+            agi_post_init_without_fibers
           end
           f.resume
         end
       end
+      super
     end
 
     def send_command(cmd, *args)
@@ -19,7 +20,7 @@ module Batphone
       deferrable.callback do |line|
         f.resume line
       end
-      deferrable.callback do |error|
+      deferrable.errback do |error|
         f.resume Exception.new error
       end
       Fiber.yield
